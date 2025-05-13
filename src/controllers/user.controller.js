@@ -2,7 +2,7 @@ import { asynchandler } from "../utils/Asynchandler.js";
 import {APIError } from "../utils/Apierror.js"
 import { user } from "../models/user.model.js";
 import {uploadOnLCloudinary} from "../utils/cloudinary.js"
-
+import { APIresponse } from "../utils/Apiresponse.js";
 
 const registeruser = asynchandler(async (req, res) => {
  // get user details from frontend
@@ -47,7 +47,7 @@ const registeruser = asynchandler(async (req, res) => {
     throw new APIError(400,"Avatar is Required ")
    }
 
-    const user=await user.create({
+    const User=await user.create({
         fullname,
         email,
         avatar:avatar.url,
@@ -55,6 +55,18 @@ const registeruser = asynchandler(async (req, res) => {
         password,
         username:username.toLowerCase()
     })
+
+    const createduser=await user.findById(User._id).select(
+        "-password -refreshtoken"
+    )
+
+    if(!createduser){
+        throw new APIError(500,"Something Went Wrong While Registering The User..")
+    }
+        
+     return res.status(201).json(
+        new APIresponse(200,createduser,"User Registered Successfully !")
+     )
 });
 
 export { registeruser };
